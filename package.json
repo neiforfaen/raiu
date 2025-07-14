@@ -1,0 +1,43 @@
+{
+  "name": "raiu",
+  "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neiforfaen/raiu.git"
+  },
+  "author": {
+    "name": "kaiden",
+    "url": "https://kaiden.sh"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -fdx node_modules dist",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "hono": "^4.8.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.0.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "typescript": "^5.8.3",
+    "ultracite": "5.0.32",
+    "wrangler": "^4.4.0"
+  },
+  "packageManager": "pnpm@10.9.0",
+  "engines": {
+    "node": "20"
+  },
+  "lint-staged": {
+    "*": [
+      "biome check --no-errors-on-unmatched --files-ignore-unknown=true"
+    ]
+  }
+}
