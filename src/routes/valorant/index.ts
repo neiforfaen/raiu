@@ -42,6 +42,8 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
       error_message: `Bad Request: Invalid region: ${region}.`,
     })
 
+    await axiom.flush()
+
     return c.json(
       {
         error: `Bad Request: Invalid region: ${region}. Valid regions are: eu, na, ap, kr, br, latam.`,
@@ -62,6 +64,8 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
       event_type: 'bad_request_error',
       error_message: 'Bad Request: Incorrect name and/or tag value.',
     })
+
+    await axiom.flush()
 
     return c.json(
       {
@@ -112,6 +116,8 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
         error_message: `No data found for: ${name}#${tag}`,
       })
 
+      await axiom.flush()
+
       return c.json(
         { error: `Not Found: No data found for: ${name}#${tag}` },
         404
@@ -147,6 +153,8 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
       error_message: message,
     })
 
+    await axiom.flush()
+
     return c.json(
       { error: 'Internal Server Error: External API call failed.' },
       500
@@ -180,6 +188,8 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
       error_message: `Bad Request: Invalid region: ${region}.`,
     })
 
+    await axiom.flush()
+
     return c.json(
       {
         error: `Bad Request: Invalid region: ${region}. Valid regions are: eu, na, ap, kr, br, latam.`,
@@ -200,6 +210,8 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
       event_type: 'bad_request_error',
       error_message: 'Bad Request: Incorrect name and/or tag value.',
     })
+
+    await axiom.flush()
 
     return c.json(
       {
@@ -240,6 +252,8 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
         error_message: `No data found for: ${name}#${tag}`,
       })
 
+      await axiom.flush()
+
       return c.json(
         { error: `Not Found: No data found for: ${name}#${tag}` },
         404
@@ -270,6 +284,8 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
       event_type: 'internal_server_error',
       error_message: message,
     })
+
+    await axiom.flush()
 
     return c.json(
       { error: 'Internal Server Error: External API call failed.' },
