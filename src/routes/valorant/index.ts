@@ -3,6 +3,7 @@ import type {
   ValorantRankResponse,
   ValorantRecordResponse,
 } from '../../types/types.global'
+import { createAxiomClient } from '../../utils/axiom'
 import { aggregateValorantRecords } from '../../utils/elo-aggregator'
 import { formatRankMessage } from '../../utils/format-message'
 import {
@@ -18,6 +19,8 @@ const valorantRouter = createRouter()
 // GET: /rest/valorant/v1/rank/:region/:name/:tag
 // Fetches the current Valorant rank for a given player
 valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
+  const axiom = createAxiomClient(c)
+
   const { name, tag, region } = c.req.param()
   const { style, format } = c.req.query()
   const VALORANT_API_KEY = c.env.VALORANT_API_KEY
@@ -27,6 +30,18 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
   }
 
   if (!validateRegion(region)) {
+    axiom.ingest('raiu-requests', {
+      timestamp: new Date().toISOString(),
+      request_id: c.get('requestId'),
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+      user_agent: c.req.header('user-agent'),
+      ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+      event_type: 'bad_request_error',
+      error_message: `Bad Request: Invalid region: ${region}.`,
+    })
+
     return c.json(
       {
         error: `Bad Request: Invalid region: ${region}. Valid regions are: eu, na, ap, kr, br, latam.`,
@@ -36,6 +51,18 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
   }
 
   if (!(validateString(name) && validateString(tag))) {
+    axiom.ingest('raiu-requests', {
+      timestamp: new Date().toISOString(),
+      request_id: c.get('requestId'),
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+      user_agent: c.req.header('user-agent'),
+      ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+      event_type: 'bad_request_error',
+      error_message: 'Bad Request: Incorrect name and/or tag value.',
+    })
+
     return c.json(
       {
         error:
@@ -73,6 +100,18 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
     }: ValorantRankResponse = await res.json()
 
     if (!(current_data && highest_rank)) {
+      axiom.ingest('raiu-requests', {
+        timestamp: new Date().toISOString(),
+        request_id: c.get('requestId'),
+        method: c.req.method,
+        path: c.req.path,
+        url: c.req.url,
+        user_agent: c.req.header('user-agent'),
+        ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+        event_type: 'not_found_error',
+        error_message: `No data found for: ${name}#${tag}`,
+      })
+
       return c.json(
         { error: `Not Found: No data found for: ${name}#${tag}` },
         404
@@ -94,8 +133,20 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
       ? c.text(messageStr, 200)
       : c.json({ message: messageStr }, 200)
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: DEV
-    console.error('Error fetching data from external API:', error)
+    const { message } = error as Error
+
+    axiom.ingest('raiu-requests', {
+      timestamp: new Date().toISOString(),
+      request_id: c.get('requestId'),
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+      user_agent: c.req.header('user-agent'),
+      ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+      event_type: 'internal_server_error',
+      error_message: message,
+    })
+
     return c.json(
       { error: 'Internal Server Error: External API call failed.' },
       500
@@ -106,6 +157,8 @@ valorantRouter.get('/v1/rank/:region/:name/:tag', async (c) => {
 // GET: /rest/valorant/v1/record/:region/:name/:tag
 // Fetches the current Valorant record for a given player in the past 24 hours (max: 14 games)
 valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
+  const axiom = createAxiomClient(c)
+
   const { name, tag, region } = c.req.param()
   const { format } = c.req.query()
   const VALORANT_API_KEY = c.env.VALORANT_API_KEY
@@ -115,6 +168,18 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
   }
 
   if (!validateRegion(region)) {
+    axiom.ingest('raiu-requests', {
+      timestamp: new Date().toISOString(),
+      request_id: c.get('requestId'),
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+      user_agent: c.req.header('user-agent'),
+      ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+      event_type: 'bad_request_error',
+      error_message: `Bad Request: Invalid region: ${region}.`,
+    })
+
     return c.json(
       {
         error: `Bad Request: Invalid region: ${region}. Valid regions are: eu, na, ap, kr, br, latam.`,
@@ -124,6 +189,18 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
   }
 
   if (!(validateString(name) && validateString(tag))) {
+    axiom.ingest('raiu-requests', {
+      timestamp: new Date().toISOString(),
+      request_id: c.get('requestId'),
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+      user_agent: c.req.header('user-agent'),
+      ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+      event_type: 'bad_request_error',
+      error_message: 'Bad Request: Incorrect name and/or tag value.',
+    })
+
     return c.json(
       {
         error:
@@ -151,6 +228,18 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
       await res.json()
 
     if (!valorantGameHistory) {
+      axiom.ingest('raiu-requests', {
+        timestamp: new Date().toISOString(),
+        request_id: c.get('requestId'),
+        method: c.req.method,
+        path: c.req.path,
+        url: c.req.url,
+        user_agent: c.req.header('user-agent'),
+        ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+        event_type: 'not_found_error',
+        error_message: `No data found for: ${name}#${tag}`,
+      })
+
       return c.json(
         { error: `Not Found: No data found for: ${name}#${tag}` },
         404
@@ -168,8 +257,20 @@ valorantRouter.get('/v1/record/:region/:name/:tag', async (c) => {
       ? c.text(messageStr, 200)
       : c.json({ message: messageStr }, 200)
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: DEV
-    console.error('Error fetching data from external API:', error)
+    const { message } = error as Error
+
+    axiom.ingest('raiu-requests', {
+      timestamp: new Date().toISOString(),
+      request_id: c.get('requestId'),
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+      user_agent: c.req.header('user-agent'),
+      ip: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for'),
+      event_type: 'internal_server_error',
+      error_message: message,
+    })
+
     return c.json(
       { error: 'Internal Server Error: External API call failed.' },
       500
